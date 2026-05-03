@@ -5,10 +5,15 @@ export const login = async (
   username: string,
   password: string
 ): Promise<IUsuario> => {
-  const res = await api.post("/auth/login", {
-    username,
-    password,
-  });
+  const res = await api.get("/usuarios");
 
-  return res.data;
+  const usuario = res.data.find(
+    (u: IUsuario) => u.username === username && u.password === password
+  );
+
+  if (!usuario) {
+    throw new Error("Credenciales incorrectas");
+  }
+
+  return usuario;
 };
