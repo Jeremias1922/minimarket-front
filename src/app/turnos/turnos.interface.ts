@@ -7,8 +7,10 @@ export interface IResumenTurno {
   cantidadVentas: number;
   totalRecaudado: number;
   ticketPromedio: number;
+  totalEfectivo: number;
+  totalDebito: number;
+  totalCredito: number;
 }
-
 export interface IDetalleVenta {
   productoId: number;
   nombreProducto: string;

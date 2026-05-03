@@ -1,9 +1,13 @@
 export interface IResumenTurno {
   turnoId: number;
+  usuarioNombre: string;
+  fechaApertura: string;
+  fechaCierre: string | null;
+  estado: "ABIERTO" | "CERRADO";
   cantidadVentas: number;
   totalRecaudado: number;
   ticketPromedio: number;
-   totalEfectivo: number;
+  totalEfectivo: number;
   totalDebito: number;
   totalCredito: number;
 }
