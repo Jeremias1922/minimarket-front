@@ -15,7 +15,9 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
+
 import useAuth from "../login/useAuth";
+import { IProducto } from "@/app/productos/productos.interface";
 
 export const Caja = () => {
   const {
@@ -24,7 +26,6 @@ export const Caja = () => {
     carrito,
     medioPago,
     setMedioPago,
-    busqueda,
     resultados,
     buscarProducto,
     buscarPorNombre,
@@ -42,68 +43,173 @@ export const Caja = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const usuario = getUsuario();
+    const usuarioGuardado = getUsuario();
 
-    if (!usuario) {
+    if (!usuarioGuardado) {
       router.push("/login");
     }
-  }, []);
+  }, [router]);
+
+  const money = (valor: number) =>
+    `$${Number(valor || 0).toLocaleString("es-AR")}`;
+
+  const limpiarBusqueda = () => {
+    setCodigo("");
+    buscarPorNombre("");
+  };
+
+  const seleccionarProducto = (producto: IProducto) => {
+    agregarDesdeBusqueda(producto);
+    limpiarBusqueda();
+  };
+
+  const handleCambioBusqueda = (valor: string) => {
+    setCodigo(valor);
+
+    if (!valor.trim()) {
+      buscarPorNombre("");
+      return;
+    }
+
+    buscarPorNombre(valor);
+  };
+
+  const handleEnterBusqueda = async () => {
+    const termino = codigo.trim();
+
+    if (!termino) {
+      return;
+    }
+
+    /*
+     * Si el texto contiene solamente números, se interpreta
+     * como un código de barras.
+     */
+    const esCodigoDeBarras = /^\d+$/.test(termino);
+
+    if (esCodigoDeBarras) {
+      await buscarProducto();
+      buscarPorNombre("");
+      return;
+    }
+
+    /*
+     * Si se buscó por nombre y hay un único resultado,
+     * se agrega directamente al carrito.
+     */
+    if (resultados.length === 1) {
+      seleccionarProducto(resultados[0]);
+    }
+  };
 
   return (
     <>
       <Header title="Caja" />
 
-      <Box sx={{ display: "flex", height: "calc(100vh - 72px)", backgroundColor: "#f3f4f6" }}>
+      <Box
+        sx={{
+          display: "flex",
+          height: "calc(100vh - 72px)",
+          backgroundColor: "#f3f4f6",
+        }}
+      >
         <Box sx={{ flex: 2, p: 3 }}>
-          <Paper sx={{ p: 3, borderRadius: 3, height: "100%", display: "flex", flexDirection: "column" }}>
+          <Paper
+            sx={{
+              p: 3,
+              borderRadius: 3,
+              height: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {/* Búsqueda unificada */}
             <TextField
               value={codigo}
-              onChange={(e) => setCodigo(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && buscarProducto()}
-              placeholder="Escanear código de barras..."
+              onChange={(event) =>
+                handleCambioBusqueda(event.target.value)
+              }
+              onKeyDown={async (event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  await handleEnterBusqueda();
+                }
+              }}
+              placeholder="Escanear código o buscar producto por nombre..."
               fullWidth
-              sx={{ mb: 2 }}
+              autoFocus
+              sx={{
+                mb: resultados.length > 0 ? 1 : 3,
+              }}
             />
 
-            <TextField
-              value={busqueda}
-              onChange={(e) => buscarPorNombre(e.target.value)}
-              placeholder="Buscar producto por nombre..."
-              fullWidth
-              sx={{ mb: resultados.length > 0 ? 1 : 3 }}
-            />
-
-            {resultados.length > 0 && (
-              <Paper sx={{ mb: 3, maxHeight: 220, overflow: "auto", border: "1px solid #e5e7eb" }}>
+            {/* Resultados de búsqueda por nombre */}
+            {resultados.length > 0 && codigo.trim() && (
+              <Paper
+                sx={{
+                  mb: 3,
+                  maxHeight: 220,
+                  overflow: "auto",
+                  border: "1px solid #e5e7eb",
+                }}
+              >
                 {resultados.map((producto) => (
                   <Box
                     key={producto.id}
-                    onClick={() => agregarDesdeBusqueda(producto)}
+                    onClick={() => seleccionarProducto(producto)}
                     sx={{
                       p: 2,
                       display: "flex",
                       justifyContent: "space-between",
+                      alignItems: "center",
                       cursor: "pointer",
                       borderBottom: "1px solid #f3f4f6",
-                      "&:hover": { backgroundColor: "#fff7ed" },
+                      "&:last-child": {
+                        borderBottom: "none",
+                      },
+                      "&:hover": {
+                        backgroundColor: "#fff7ed",
+                      },
                     }}
                   >
-                    <Typography>{producto.nombre}</Typography>
-                    <Typography sx={{ fontWeight: 600 }}>${producto.precio}</Typography>
+                    <Box>
+                      <Typography sx={{ fontWeight: 600 }}>
+                        {producto.nombre}
+                      </Typography>
+
+                      {producto.codigoBarras && (
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                        >
+                          Código: {producto.codigoBarras}
+                        </Typography>
+                      )}
+                    </Box>
+
+                    <Typography sx={{ fontWeight: 700 }}>
+                      {money(producto.precio)}
+                    </Typography>
                   </Box>
                 ))}
               </Paper>
             )}
 
+            {/* Productos agregados al carrito */}
             <Box sx={{ flex: 1, overflow: "auto" }}>
-              {carrito.length === 0 && <Typography color="text.secondary">No hay productos</Typography>}
+              {carrito.length === 0 && (
+                <Typography color="text.secondary">
+                  No hay productos
+                </Typography>
+              )}
 
               {carrito.map((item) => (
                 <Box
                   key={item.productoId}
                   sx={{
                     display: "grid",
-                    gridTemplateColumns: "1.6fr 180px 140px 100px",
+                    gridTemplateColumns:
+                      "1.6fr 180px 140px 100px",
                     alignItems: "center",
                     borderBottom: "1px solid #e5e7eb",
                     py: 2,
@@ -111,31 +217,75 @@ export const Caja = () => {
                   }}
                 >
                   <Box>
-                    <Typography sx={{ fontWeight: 600 }}>{item.nombre}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      ${item.precio} c/u
+                    <Typography sx={{ fontWeight: 600 }}>
+                      {item.nombre}
+                    </Typography>
+
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                    >
+                      {money(item.precio)} c/u
                     </Typography>
                   </Box>
 
-                  <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}>
-                    <Button size="small" variant="outlined" onClick={() => restarCantidad(item.productoId)} sx={{ minWidth: 48 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 1,
+                    }}
+                  >
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() =>
+                        restarCantidad(item.productoId)
+                      }
+                      sx={{ minWidth: 48 }}
+                    >
                       -
                     </Button>
 
-                    <Typography sx={{ fontWeight: 700, minWidth: 24, textAlign: "center" }}>
+                    <Typography
+                      sx={{
+                        fontWeight: 700,
+                        minWidth: 24,
+                        textAlign: "center",
+                      }}
+                    >
                       {item.cantidad}
                     </Typography>
 
-                    <Button size="small" variant="outlined" onClick={() => sumarCantidad(item.productoId)} sx={{ minWidth: 48 }}>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() =>
+                        sumarCantidad(item.productoId)
+                      }
+                      sx={{ minWidth: 48 }}
+                    >
                       +
                     </Button>
                   </Box>
 
-                  <Typography sx={{ fontWeight: 600, textAlign: "right" }}>
-                    ${item.precio * item.cantidad}
+                  <Typography
+                    sx={{
+                      fontWeight: 600,
+                      textAlign: "right",
+                    }}
+                  >
+                    {money(item.precio * item.cantidad)}
                   </Typography>
 
-                  <Button color="error" onClick={() => eliminarItem(item.productoId)} sx={{ justifySelf: "end" }}>
+                  <Button
+                    color="error"
+                    onClick={() =>
+                      eliminarItem(item.productoId)
+                    }
+                    sx={{ justifySelf: "end" }}
+                  >
                     Eliminar
                   </Button>
                 </Box>
@@ -144,6 +294,7 @@ export const Caja = () => {
           </Paper>
         </Box>
 
+        {/* Resumen lateral */}
         <Box
           sx={{
             width: 320,
@@ -156,24 +307,56 @@ export const Caja = () => {
           }}
         >
           <Box>
-            <Typography variant="h6" sx={{ mb: 2 }}>Resumen</Typography>
+            <Typography variant="h6" sx={{ mb: 2 }}>
+              Resumen
+            </Typography>
 
             {carrito.length === 0 ? (
-              <Typography color="text.secondary">Sin productos</Typography>
+              <Typography color="text.secondary">
+                Sin productos
+              </Typography>
             ) : (
               carrito.map((item) => (
-                <Box key={item.productoId} sx={{ display: "flex", justifyContent: "space-between", mb: 1, gap: 1 }}>
-                  <Typography variant="body2">{item.nombre} x{item.cantidad}</Typography>
-                  <Typography variant="body2">${item.precio * item.cantidad}</Typography>
+                <Box
+                  key={item.productoId}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    mb: 1,
+                    gap: 1,
+                  }}
+                >
+                  <Typography variant="body2">
+                    {item.nombre} x{item.cantidad}
+                  </Typography>
+
+                  <Typography variant="body2">
+                    {money(item.precio * item.cantidad)}
+                  </Typography>
                 </Box>
               ))
             )}
           </Box>
 
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 2 }}>${total}</Typography>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                mb: 2,
+              }}
+            >
+              {money(total)}
+            </Typography>
 
-            <Select fullWidth value={medioPago} onChange={(e) => setMedioPago(e.target.value as any)} sx={{ mb: 2 }}>
+            <Select
+              fullWidth
+              value={medioPago}
+              onChange={(event) =>
+                setMedioPago(event.target.value as any)
+              }
+              sx={{ mb: 2 }}
+            >
               <MenuItem value="EFECTIVO">Efectivo</MenuItem>
               <MenuItem value="DEBITO">Débito</MenuItem>
               <MenuItem value="CREDITO">Crédito</MenuItem>
@@ -182,6 +365,7 @@ export const Caja = () => {
             <Button
               fullWidth
               variant="contained"
+              disabled={carrito.length === 0}
               onClick={() => {
                 if (!usuario?.id) {
                   alert("No hay usuario logueado");
@@ -192,7 +376,9 @@ export const Caja = () => {
               }}
               sx={{
                 backgroundColor: "#16a34a",
-                "&:hover": { backgroundColor: "#15803d" },
+                "&:hover": {
+                  backgroundColor: "#15803d",
+                },
                 py: 1.5,
                 fontWeight: 600,
               }}
@@ -201,7 +387,12 @@ export const Caja = () => {
             </Button>
 
             {carrito.length > 0 && (
-              <Button fullWidth color="error" sx={{ mt: 1 }} onClick={limpiarCarrito}>
+              <Button
+                fullWidth
+                color="error"
+                sx={{ mt: 1 }}
+                onClick={limpiarCarrito}
+              >
                 Limpiar carrito
               </Button>
             )}

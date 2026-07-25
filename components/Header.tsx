@@ -18,7 +18,7 @@ interface HeaderProps {
 
 interface Usuario {
   nombre: string;
-  rol: "ADMIN" | "CAJERO";
+  rol: "DUENIO" | "CAJERO" | "ENCARGADO" ;
 }
 
 export default function Header({ title }: HeaderProps) {
@@ -91,9 +91,13 @@ export default function Header({ title }: HeaderProps) {
             }}
           >
             <MenuLink href="/caja">Caja</MenuLink>
+            <MenuLink href="/movimientos-caja">Movimientos de caja</MenuLink>
             <MenuLink href="/productos">Productos</MenuLink>
             <MenuLink href="/ventas">Ventas</MenuLink>
             <MenuLink href="/turnos">Turnos</MenuLink>
+            {usuario?.rol === "DUENIO" && (
+      <MenuLink href="/dashboard">Dashboard</MenuLink>
+    )}
           </Paper>
         )}
       </Box>

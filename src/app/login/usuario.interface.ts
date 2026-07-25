@@ -3,5 +3,5 @@ export interface IUsuario {
   nombre: string;
   username: string;
   password: string;
-  rol: "ADMIN" | "CAJERO";
+  rol: "CAJERO" | "ENCARGADO" | "DUENIO";
 }
