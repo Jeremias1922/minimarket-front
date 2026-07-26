@@ -81,7 +81,7 @@ export default function CerrarTurnoModal({
 
       return redondear(
         efectivoRealNumerico -
-          turno.efectivoEsperado
+        turno.efectivoEsperado
       );
     }, [
       efectivoRealNumerico,
@@ -149,7 +149,7 @@ export default function CerrarTurnoModal({
 
   const diferenciaColor =
     diferenciaPrevia === null ||
-    diferenciaPrevia === 0
+      diferenciaPrevia === 0
       ? "text.primary"
       : diferenciaPrevia > 0
         ? "success.main"
@@ -225,9 +225,11 @@ export default function CerrarTurnoModal({
               label="Efectivo real contado"
               value={efectivoReal}
               disabled={cerrando}
-              inputProps={{
-                min: 0,
-                step: 0.01,
+              slotProps={{
+                htmlInput: {
+                  min: 0,
+                  step: 0.01,
+                },
               }}
               onChange={(event) => {
                 setEfectivoReal(
@@ -283,11 +285,11 @@ export default function CerrarTurnoModal({
                   }}
                 >
                   {diferenciaPrevia ===
-                  null
+                    null
                     ? "-"
                     : money(
-                        diferenciaPrevia
-                      )}
+                      diferenciaPrevia
+                    )}
                 </Typography>
 
                 <Typography
@@ -359,11 +361,11 @@ function obtenerMensajeError(
       error as {
         response?: {
           data?:
-            | string
-            | {
-                mensaje?: string;
-                message?: string;
-              };
+          | string
+          | {
+            mensaje?: string;
+            message?: string;
+          };
         };
       }
     ).response;
