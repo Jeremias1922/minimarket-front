@@ -3,6 +3,7 @@ export type ItemCarrito = {
   nombre: string;
   precio: number;
   cantidad: number;
+  stock: number;
 };
 
 export type MedioPago = "EFECTIVO" | "DEBITO" | "CREDITO";

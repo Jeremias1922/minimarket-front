@@ -49,6 +49,10 @@ export default function Productos() {
   const usuario = obtenerUsuario();
   const router = useRouter();
 
+  const puedeModificarPrecio =
+  usuario?.rol === "DUENIO" ||
+  usuario?.rol === "ENCARGADO";
+
   useEffect(() => {
     const usuarioGuardado = getUsuario();
 
@@ -115,7 +119,10 @@ export default function Productos() {
               type="number"
               value={form.precio}
               onChange={(e) => onChange("precio", e.target.value)}
-              disabled={loading}
+              disabled={
+                loading ||
+                (!!productoEditandoId && !puedeModificarPrecio)
+              }
             />
 
             <TextField

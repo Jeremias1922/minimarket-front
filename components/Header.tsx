@@ -94,10 +94,13 @@ export default function Header({ title }: HeaderProps) {
             <MenuLink href="/movimientos-caja">Movimientos de caja</MenuLink>
             <MenuLink href="/productos">Productos</MenuLink>
             <MenuLink href="/ventas">Ventas</MenuLink>
-            <MenuLink href="/turnos">Turnos</MenuLink>
+            {(usuario?.rol === "DUENIO" ||
+              usuario?.rol === "ENCARGADO") && (
+                <MenuLink href="/turnos">Turnos</MenuLink>
+              )}
             {usuario?.rol === "DUENIO" && (
-      <MenuLink href="/dashboard">Dashboard</MenuLink>
-    )}
+              <MenuLink href="/dashboard">Dashboard</MenuLink>
+            )}
           </Paper>
         )}
       </Box>

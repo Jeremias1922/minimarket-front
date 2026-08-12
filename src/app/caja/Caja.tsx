@@ -14,29 +14,31 @@ import {
   Button,
   Select,
   MenuItem,
+  CircularProgress,
 } from "@mui/material";
 
 import useAuth from "../login/useAuth";
 import { IProducto } from "@/app/productos/productos.interface";
 
 export const Caja = () => {
-  const {
-    codigo,
-    setCodigo,
-    carrito,
-    medioPago,
-    setMedioPago,
-    resultados,
-    buscarProducto,
-    buscarPorNombre,
-    agregarDesdeBusqueda,
-    cobrar,
-    total,
-    sumarCantidad,
-    restarCantidad,
-    eliminarItem,
-    limpiarCarrito,
-  } = useCaja();
+const {
+  codigo,
+  setCodigo,
+  carrito,
+  medioPago,
+  setMedioPago,
+  resultados,
+  buscarProducto,
+  buscarPorNombre,
+  agregarDesdeBusqueda,
+  cobrar,
+  cobrando,
+  total,
+  sumarCantidad,
+  restarCantidad,
+  eliminarItem,
+  limpiarCarrito,
+} = useCaja();
 
   const { obtenerUsuario } = useAuth();
   const usuario = obtenerUsuario();
@@ -358,14 +360,14 @@ export const Caja = () => {
               sx={{ mb: 2 }}
             >
               <MenuItem value="EFECTIVO">Efectivo</MenuItem>
-              <MenuItem value="DEBITO">Débito</MenuItem>
+              <MenuItem value="DEBITO">Transferencia</MenuItem>
               <MenuItem value="CREDITO">Crédito</MenuItem>
             </Select>
 
             <Button
               fullWidth
               variant="contained"
-              disabled={carrito.length === 0}
+              disabled={carrito.length === 0 || cobrando}
               onClick={() => {
                 if (!usuario?.id) {
                   alert("No hay usuario logueado");
@@ -383,7 +385,19 @@ export const Caja = () => {
                 fontWeight: 600,
               }}
             >
-              COBRAR
+              {cobrando ? (
+                <>
+                  <CircularProgress
+                    size={20}
+                    color="inherit"
+                    sx={{ mr: 1 }}
+                  />
+
+                  PROCESANDO...
+                </>
+              ) : (
+                "COBRAR"
+              )}
             </Button>
 
             {carrito.length > 0 && (
